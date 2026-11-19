@@ -7,20 +7,24 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.DoubleSummaryStatistics;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * Консольна програма обробки товарів магазину техніки (варіант 10).
  *
- * <p>Лабораторна робота № 3: товари тепер представлені конкретними
- * підтипами ({@link Laptop}, {@link Peripheral}), а вартість гарантійного
- * обслуговування рахується поліморфно - через {@link Product#warrantyCost()}.</p>
+ * <p>Лабораторна робота № 4: підсумкові показники та додаткові вибірки
+ * тепер рахуються через Stream API ({@link ProductQueries}) замість
+ * звичайних циклів.</p>
  */
 public final class Main {
 
     private static final Path DEFAULT_INPUT = Path.of("data", "input.csv");
     private static final Path DEFAULT_OUTPUT = Path.of("out", "report.txt");
+    private static final String SAMPLE_NAME = "Lenovo IdeaPad 3";
 
     private Main() {
     }
@@ -54,7 +58,8 @@ public final class Main {
     }
 
     /**
-     * Розбирає всі рядки у товари, збирає помилки й формує текст звіту.
+     * Розбирає всі рядки у товари, збирає помилки й формує текст звіту,
+     * використовуючи Stream API для підсумків і вибірок.
      *
      * @param lines рядки вхідного CSV-файлу
      * @return готовий, відформатований текст звіту
@@ -72,20 +77,19 @@ public final class Main {
             }
         }
 
-        int validCount = products.size();
-        double totalPrice = 0.0;
-        double totalWarrantyCost = 0.0;
-        int maxWarranty = 0;
-        int totalStock = 0;
-        for (Product product : products) {
-            totalPrice += product.price();
-            totalWarrantyCost += product.warrantyCost();
-            maxWarranty = Math.max(maxWarranty, product.warrantyMonths());
-            totalStock += product.stock();
-        }
-        double averagePrice = validCount == 0 ? 0.0 : totalPrice / validCount;
-
         StringBuilder report = new StringBuilder();
+        appendBaseMetrics(report, products, errors);
+        appendStreamQueries(report, products);
+        return report.toString();
+    }
+
+    private static void appendBaseMetrics(StringBuilder report, List<Product> products, List<String> errors) {
+        int validCount = products.size();
+        double averagePrice = products.stream().mapToDouble(Product::price).average().orElse(0.0);
+        int maxWarranty = products.stream().mapToInt(Product::warrantyMonths).max().orElse(0);
+        int totalStock = products.stream().mapToInt(Product::stock).sum();
+        double totalWarrantyCost = products.stream().mapToDouble(Product::warrantyCost).sum();
+
         report.append(line("Коректних записів: %d", validCount));
         report.append(line("Середня ціна: %.2f грн", averagePrice));
         report.append(line("Найдовша гарантія: %d міс", maxWarranty));
@@ -95,7 +99,29 @@ public final class Main {
         for (String error : errors) {
             report.append(error).append(System.lineSeparator());
         }
-        return report.toString();
+    }
+
+    private static void appendStreamQueries(StringBuilder report, List<Product> products) {
+        List<Product> inStock = ProductQueries.withPositiveStock(products);
+        report.append(line("Товарів у наявності: %d", inStock.size()));
+
+        List<String> sortedNames = ProductQueries.names(products);
+        report.append(line("Назви (відсортовано): %s", String.join(", ", sortedNames)));
+
+        Map<ProductKind, Double> stockValueByCategory = ProductQueries.stockValueByCategory(products);
+        for (ProductKind kind : ProductKind.values()) {
+            report.append(line("Вартість залишку [%s]: %.2f грн",
+                    kind.label(), stockValueByCategory.getOrDefault(kind, 0.0)));
+        }
+
+        DoubleSummaryStatistics priceStats = ProductQueries.priceStatistics(products);
+        report.append(line("Ціна: мін=%.2f, макс=%.2f грн", priceStats.getMin(), priceStats.getMax()));
+
+        List<String> top = ProductQueries.topByPriceDescending(products, 3);
+        report.append(line("Топ-3 за ціною: %s", String.join(", ", top)));
+
+        Optional<Product> found = ProductQueries.findByName(products, SAMPLE_NAME);
+        report.append(line("Знайдено '%s': %b", SAMPLE_NAME, found.isPresent()));
     }
 
     private static String line(String pattern, Object... args) {
@@ -115,7 +141,7 @@ public final class Main {
     }
 
     private static void printUsage() {
-        System.out.printf("Використання: java -jar lab03.jar [--help] [--version] "
+        System.out.printf("Використання: java -jar lab04.jar [--help] [--version] "
                 + "[--input <файл>] [--output <файл>]%n");
     }
 

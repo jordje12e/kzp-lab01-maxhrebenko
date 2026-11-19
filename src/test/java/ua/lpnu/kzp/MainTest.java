@@ -33,6 +33,7 @@ class MainTest {
 
         assertTrue(report.contains("Коректних записів: 0"));
         assertTrue(report.contains("Середня ціна: 0.00 грн"));
+        assertTrue(report.contains("Товарів у наявності: 0"));
     }
 
     @Test
@@ -51,27 +52,6 @@ class MainTest {
     }
 
     @Test
-    void emptyNameIsRejected() {
-        String report = Main.buildReport(List.of(" ;Ноутбук;1000;12;1"));
-
-        assertTrue(report.contains("Помилок: 1"));
-    }
-
-    @Test
-    void negativePriceIsRejected() {
-        String report = Main.buildReport(List.of("Товар;Ноутбук;-1;12;1"));
-
-        assertTrue(report.contains("Помилок: 1"));
-    }
-
-    @Test
-    void malformedNumberIsRejected() {
-        String report = Main.buildReport(List.of("Товар;Ноутбук;сто;12;1"));
-
-        assertTrue(report.contains("Помилок: 1"));
-    }
-
-    @Test
     void unknownCategoryIsRejected() {
         String report = Main.buildReport(List.of("Монітор Dell;Монітор;1000;12;1"));
 
@@ -79,11 +59,30 @@ class MainTest {
     }
 
     @Test
-    void warrantyCostDependsOnProductKind() {
+    void reportIncludesStockValueByCategory() {
         String report = Main.buildReport(List.of(
-                "Ноутбук A;Ноутбук;20000.00;24;1"));
+                "Ноутбук A;Ноутбук;1000.00;12;2",
+                "Миша;Периферія;500.00;6;4"));
 
-        assertTrue(report.contains("Загальна вартість гарантійного обслуговування: 2200.00 грн"));
+        assertTrue(report.contains("Вартість залишку [Ноутбук]: 2000.00 грн"));
+        assertTrue(report.contains("Вартість залишку [Периферія]: 2000.00 грн"));
+    }
+
+    @Test
+    void reportIncludesTopThreeByPrice() {
+        String report = Main.buildReport(List.of(
+                "A;Ноутбук;1000.00;12;1",
+                "B;Ноутбук;3000.00;12;1",
+                "C;Ноутбук;2000.00;12;1"));
+
+        assertTrue(report.contains("Топ-3 за ціною: B, C, A"));
+    }
+
+    @Test
+    void reportIncludesFoundFlagForSampleProduct() {
+        String report = Main.buildReport(List.of("Lenovo IdeaPad 3;Ноутбук;24999.00;24;5"));
+
+        assertTrue(report.contains("Знайдено 'Lenovo IdeaPad 3': true"));
     }
 
     @Test

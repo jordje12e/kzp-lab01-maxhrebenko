@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>ua.lpnu.kzp</groupId>
-    <artifactId>lab03</artifactId>
+    <artifactId>lab04</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
 
@@ -23,7 +23,7 @@
     </dependencies>
 
     <build>
-        <finalName>lab03</finalName>
+        <finalName>lab04</finalName>
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
