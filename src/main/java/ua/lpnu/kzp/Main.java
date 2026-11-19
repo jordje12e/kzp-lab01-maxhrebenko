@@ -13,29 +13,19 @@ import java.util.Locale;
 /**
  * Консольна програма обробки товарів магазину техніки (варіант 10).
  *
- * <p>Лабораторна робота № 1: рядок CSV розбирається прямо в циклі, без
- * окремих класів предметної області - вони з'являться в наступних роботах.
- * Формат одного запису: {@code назва;категорія;ціна;гарантія(міс);залишок(шт)}.</p>
+ * <p>Лабораторна робота № 2: рядки CSV тепер перетворюються на об'єкти
+ * {@link Product} через статичну фабрику {@link ProductParser#fromCsv(String)},
+ * а не обробляються "наживо" прямо в циклі, як у лабораторній № 1.</p>
  */
 public final class Main {
 
-    private static final int FIELD_COUNT = 5;
     private static final Path DEFAULT_INPUT = Path.of("data", "input.csv");
     private static final Path DEFAULT_OUTPUT = Path.of("out", "report.txt");
 
-    /** Забороняє створення екземплярів класу запуску. */
     private Main() {
     }
 
-    /**
-     * Точка входу до програми.
-     *
-     * @param args {@code --help}, {@code --version}, {@code --input <файл>},
-     *             {@code --output <файл>}
-     */
     public static void main(String[] args) {
-        // Явно задаємо UTF-8 для консолі, бо кодування Windows за замовчуванням
-        // може спотворювати українські символи.
         System.setOut(new PrintStream(System.out, true, StandardCharsets.UTF_8));
 
         if (containsFlag(args, "--help")) {
@@ -64,68 +54,33 @@ public final class Main {
     }
 
     /**
-     * Обробляє всі рядки вхідного файлу й формує текст звіту.
+     * Розбирає всі рядки у товари, збирає помилки й формує текст звіту.
      *
      * @param lines рядки вхідного CSV-файлу
      * @return готовий, відформатований текст звіту
      */
     static String buildReport(List<String> lines) {
+        List<Product> products = new ArrayList<>();
         List<String> errors = new ArrayList<>();
-
-        int validCount = 0;
-        double totalPrice = 0.0;
-        int maxWarranty = 0;
-        int totalStock = 0;
 
         for (int lineNumber = 1; lineNumber <= lines.size(); lineNumber++) {
             String line = lines.get(lineNumber - 1);
-            if (line.isBlank()) {
-                errors.add("Рядок %d: порожній рядок".formatted(lineNumber));
-                continue;
-            }
-
-            String[] fields = line.split(";", -1);
-            if (fields.length != FIELD_COUNT) {
-                errors.add("Рядок %d: очікується %d полів, отримано %d"
-                        .formatted(lineNumber, FIELD_COUNT, fields.length));
-                continue;
-            }
-
-            String name = fields[0].trim();
-            String category = fields[1].trim();
-            if (name.isEmpty() || category.isEmpty()) {
-                errors.add("Рядок %d: порожнє обов'язкове текстове поле".formatted(lineNumber));
-                continue;
-            }
-            if (!category.equals("Ноутбук") && !category.equals("Периферія")) {
-                errors.add("Рядок %d: невідома категорія товару \"%s\"".formatted(lineNumber, category));
-                continue;
-            }
-
-            double price;
-            int warrantyMonths;
-            int stock;
             try {
-                price = Double.parseDouble(fields[2].trim());
-                warrantyMonths = Integer.parseInt(fields[3].trim());
-                stock = Integer.parseInt(fields[4].trim());
-            } catch (NumberFormatException exception) {
-                errors.add("Рядок %d: числове поле має помилковий формат".formatted(lineNumber));
-                continue;
+                products.add(ProductParser.fromCsv(line));
+            } catch (IllegalArgumentException exception) {
+                errors.add("Рядок %d: %s".formatted(lineNumber, exception.getMessage()));
             }
-
-            if (price < 0 || !Double.isFinite(price) || warrantyMonths < 0 || stock < 0) {
-                errors.add("Рядок %d: числові поля не можуть бути від'ємними".formatted(lineNumber));
-                continue;
-            }
-
-            validCount++;
-            totalPrice += price;
-            maxWarranty = Math.max(maxWarranty, warrantyMonths);
-            totalStock += stock;
         }
 
-        // Явне приведення до double не дає цілочисловому діленню відкинути дробову частину.
+        int validCount = products.size();
+        double totalPrice = 0.0;
+        int maxWarranty = 0;
+        int totalStock = 0;
+        for (Product product : products) {
+            totalPrice += product.price();
+            maxWarranty = Math.max(maxWarranty, product.warrantyMonths());
+            totalStock += product.stock();
+        }
         double averagePrice = validCount == 0 ? 0.0 : totalPrice / validCount;
 
         StringBuilder report = new StringBuilder();
@@ -157,7 +112,7 @@ public final class Main {
     }
 
     private static void printUsage() {
-        System.out.printf("Використання: java -jar lab01.jar [--help] [--version] "
+        System.out.printf("Використання: java -jar lab02.jar [--help] [--version] "
                 + "[--input <файл>] [--output <файл>]%n");
     }
 

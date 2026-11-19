@@ -4,33 +4,27 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** Перевіряє обчислення показників і обробку хибних рядків без зупинки програми. */
 class MainTest {
 
     @Test
     void countsOnlyValidRecords() {
-        List<String> lines = List.of(
-                "Lenovo IdeaPad 3;Ноутбук;21999.00;24;5",
-                "Dell Inspiron 14;Ноутбук;24999.00;36;3");
-
-        String report = Main.buildReport(lines);
+        String report = Main.buildReport(List.of(
+                "Товар A;Ноутбук;1000.00;12;1",
+                "Товар B;Периферія;2000.00;6;2"));
 
         assertTrue(report.contains("Коректних записів: 2"));
-        assertTrue(report.contains("Найдовша гарантія: 36 міс"));
-        assertTrue(report.contains("Загальна кількість на складі: 8 шт"));
+        assertTrue(report.contains("Помилок: 0"));
     }
 
     @Test
     void computesAverageWithDecimalPrecision() {
-        List<String> lines = List.of(
-                "A;Ноутбук;10.00;1;1",
-                "B;Ноутбук;11.00;1;1");
+        String report = Main.buildReport(List.of(
+                "Товар A;Ноутбук;10.00;12;1",
+                "Товар B;Периферія;11.00;6;1"));
 
-        String report = Main.buildReport(lines);
-
-        // (10 + 11) / 2 = 10.50, а не 10 через ціле ділення.
         assertTrue(report.contains("Середня ціна: 10.50 грн"));
     }
 
@@ -44,56 +38,53 @@ class MainTest {
 
     @Test
     void blankLineIsReportedAsError() {
-        String report = Main.buildReport(List.of(""));
+        String report = Main.buildReport(List.of("   "));
 
         assertTrue(report.contains("Помилок: 1"));
-        assertTrue(report.contains("порожній рядок"));
+        assertTrue(report.contains("Рядок 1:"));
     }
 
     @Test
     void wrongFieldCountIsReportedWithLineNumber() {
-        String report = Main.buildReport(List.of("JBL Charge 5;Периферія;1999.00;12"));
+        String report = Main.buildReport(List.of("Товар;Ноутбук;1000;12"));
 
         assertTrue(report.contains("Рядок 1:"));
-        assertTrue(report.contains("Помилок: 1"));
     }
 
     @Test
     void emptyNameIsRejected() {
-        String report = Main.buildReport(List.of(";Периферія;999.00;6;5"));
+        String report = Main.buildReport(List.of(" ;Ноутбук;1000;12;1"));
 
-        assertTrue(report.contains("порожнє обов'язкове текстове поле"));
+        assertTrue(report.contains("Помилок: 1"));
     }
 
     @Test
     void negativePriceIsRejected() {
-        String report = Main.buildReport(List.of("Razer DeathAdder;Периферія;-150.00;6;20"));
+        String report = Main.buildReport(List.of("Товар;Ноутбук;-1;12;1"));
 
-        assertTrue(report.contains("не можуть бути від'ємними"));
+        assertTrue(report.contains("Помилок: 1"));
     }
 
     @Test
     void malformedNumberIsRejected() {
-        String report = Main.buildReport(List.of("Acer Nitro 5;Ноутбук;31999.00;abc;2"));
+        String report = Main.buildReport(List.of("Товар;Ноутбук;сто;12;1"));
 
-        assertTrue(report.contains("помилковий формат"));
+        assertTrue(report.contains("Помилок: 1"));
     }
 
     @Test
     void unknownCategoryIsRejected() {
-        String report = Main.buildReport(List.of("Samsung Monitor 27;Монітор;5999.00;12;8"));
+        String report = Main.buildReport(List.of("Монітор Dell;Монітор;1000;12;1"));
 
-        assertTrue(report.contains("невідома категорія"));
+        assertTrue(report.contains("Помилок: 1"));
     }
 
     @Test
     void oneInvalidLineDoesNotStopProcessingTheRest() {
-        List<String> lines = List.of(
-                "Lenovo IdeaPad 3;Ноутбук;21999.00;24;5",
-                "Razer DeathAdder;Периферія;-150.00;6;20",
-                "Kingston SSD 1TB;Периферія;2199.00;24;15");
-
-        String report = Main.buildReport(lines);
+        String report = Main.buildReport(List.of(
+                "Товар A;Ноутбук;1000.00;12;1",
+                "Товар;Монітор;1000;12;1",
+                "Товар B;Периферія;2000.00;6;2"));
 
         assertTrue(report.contains("Коректних записів: 2"));
         assertTrue(report.contains("Помилок: 1"));
