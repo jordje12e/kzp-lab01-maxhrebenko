@@ -28,7 +28,7 @@ jobs:
         run: .\mvnw.cmd -B verify "-Dbuild.number=${{ github.run_number }}"
       - name: Run packaged JAR
         if: runner.os != 'Windows'
-        run: java -jar target/lab01.jar --version
+        run: java -jar $(ls target/*.jar) --version
       - uses: actions/upload-artifact@v4
         with:
           name: jar-${{ matrix.os }}-${{ github.run_number }}
