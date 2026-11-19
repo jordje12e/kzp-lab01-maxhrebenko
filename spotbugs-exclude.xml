@@ -1,0 +1,11 @@
+<FindBugsFilter>
+    <!--
+        CT_CONSTRUCTOR_THROW: конструктор Product кидає виключення при
+        порушенні інваріантів (навмисна поведінка fail-fast). Теоретична
+        атака через finalizer тут не застосовна, бо всі конкретні підтипи
+        (Laptop, Peripheral) оголошені final і не перевизначають finalize().
+    -->
+    <Match>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
+</FindBugsFilter>

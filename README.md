@@ -1,34 +1,31 @@
-# КЗП — Лабораторна робота № 2
+# КЗП — Лабораторна робота № 3
 
 Варіант 10, домен "Магазин техніки".
 
-## Що нового порівняно з лабою 1
+## Що нового порівняно з лабою 2
 
-У лабораторній № 1 рядки CSV оброблялись напряму в циклі, без окремих класів.
-У лабораторній № 2 з'являється перший клас предметної області:
-
-- `Product` — сутність товару: усі поля `private final`, конструктор одразу
-  перевіряє всі обмеження (назва й категорія не порожні, категорія відома,
-  ціна скінченна й невід'ємна, гарантія та залишок не від'ємні).
-- `WarrantyStock` — незмінний `record`, що об'єднує гарантію й залишок.
-- `ProductParser` — статичний фабричний метод `fromCsv(String)`, що перетворює
-  один рядок CSV на об'єкт `Product` або кидає `IllegalArgumentException`.
+- `Product` став **абстрактним** базовим класом.
+- З'явились конкретні підтипи `Laptop` і `Peripheral`, кожен по-своєму
+  реалізує `warrantyCost()` — приклад **поліморфізму**.
+- Категорія товару тепер `enum ProductKind` замість рядка.
+- `Product` отримав фінальні `equals`/`hashCode` на основі класу й назви.
 
 ## Збірка і запуск
 
 ```
 ./mvnw verify
-java -jar target/lab02.jar --input data/input.csv --output out/report.txt
+java -jar target/lab03.jar --input data/input.csv --output out/report.txt
 ```
 
 ## Структура проєкту
 
-- `src/main/java/ua/lpnu/kzp/Main.java` — головний клас: читання файлу,
-  делегування розбору `ProductParser`, обчислення показників, формування звіту.
-- `src/main/java/ua/lpnu/kzp/Product.java` — сутність товару.
+- `src/main/java/ua/lpnu/kzp/Main.java` — читання файлу, розбір, підрахунок показників.
+- `src/main/java/ua/lpnu/kzp/Product.java` — абстрактний базовий клас товару.
+- `src/main/java/ua/lpnu/kzp/Laptop.java`, `Peripheral.java` — конкретні підтипи.
+- `src/main/java/ua/lpnu/kzp/ProductKind.java` — enum категорій.
 - `src/main/java/ua/lpnu/kzp/WarrantyStock.java` — record "гарантія + залишок".
 - `src/main/java/ua/lpnu/kzp/ProductParser.java` — статична фабрика розбору CSV.
-- `src/main/java/ua/lpnu/kzp/VersionInfo.java` — версія й номер збірки для `--version`.
+- `src/main/java/ua/lpnu/kzp/VersionInfo.java` — версія й номер збірки.
 - `src/test/java/ua/lpnu/kzp/` — модульні тести (JUnit 5).
 
 ## Дотримання академічної доброчесності

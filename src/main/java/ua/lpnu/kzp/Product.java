@@ -1,36 +1,35 @@
 package ua.lpnu.kzp;
 
 import java.util.Locale;
+import java.util.Objects;
 
 /**
- * Товар магазину техніки (варіант 10).
+ * Абстрактний товар магазину техніки (варіант 10).
  *
- * <p>Лабораторна робота № 2: з'являється перший клас предметної області.
- * Усі поля - {@code private final}, об'єкт неможливо створити в недійсному
- * стані - конструктор одразу перевіряє всі обмеження.</p>
+ * <p>Лабораторна робота № 3: клас стає абстрактним базовим типом, від якого
+ * успадковуються конкретні підтипи {@link Laptop} та {@link Peripheral}.
+ * Кожен підтип по-своєму рахує вартість гарантійного обслуговування
+ * ({@link #warrantyCost()}) - це приклад поліморфізму.</p>
  */
-public final class Product {
+public abstract class Product {
 
     private final String name;
-    private final String category;
+    private final ProductKind kind;
     private final double price;
     private final int warrantyMonths;
     private final int stock;
 
     /**
-     * Створює товар, перевіряючи всі інваріанти.
+     * Створює товар, перевіряючи всі інваріанти. Доступний лише підкласам.
      *
      * @throws IllegalArgumentException якщо хоч одне поле порушує обмеження
      */
-    public Product(String name, String category, double price, int warrantyMonths, int stock) {
+    protected Product(String name, ProductKind kind, double price, int warrantyMonths, int stock) {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("Назва товару не може бути порожньою");
         }
-        if (category == null || category.isBlank()) {
-            throw new IllegalArgumentException("Категорія товару не може бути порожньою");
-        }
-        if (!category.equals("Ноутбук") && !category.equals("Периферія")) {
-            throw new IllegalArgumentException("Невідома категорія товару: " + category);
+        if (kind == null) {
+            throw new IllegalArgumentException("Категорія товару не може бути відсутньою");
         }
         if (price < 0 || !Double.isFinite(price)) {
             throw new IllegalArgumentException("Ціна має бути скінченним невід'ємним числом: " + price);
@@ -43,46 +42,69 @@ public final class Product {
         }
 
         this.name = name;
-        this.category = category;
+        this.kind = kind;
         this.price = price;
         this.warrantyMonths = warrantyMonths;
         this.stock = stock;
     }
 
-    public String name() {
+    public final String name() {
         return name;
     }
 
-    public String category() {
-        return category;
+    public final ProductKind kind() {
+        return kind;
     }
 
-    public double price() {
+    public final double price() {
         return price;
     }
 
-    public int warrantyMonths() {
+    public final int warrantyMonths() {
         return warrantyMonths;
     }
 
-    public int stock() {
+    public final int stock() {
         return stock;
     }
 
     /** Повертає гарантію і залишок одним незмінним записом. */
-    public WarrantyStock warrantyStock() {
+    public final WarrantyStock warrantyStock() {
         return new WarrantyStock(warrantyMonths, stock);
     }
 
     /** Повертає вартість усього залишку цього товару на складі. */
-    public double stockValue() {
+    public final double stockValue() {
         return price * stock;
+    }
+
+    /**
+     * Вартість гарантійного обслуговування - рахується по-різному для
+     * кожного підтипу товару (поліморфна поведінка).
+     */
+    public abstract double warrantyCost();
+
+    @Override
+    public final boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        }
+        if (other == null || getClass() != other.getClass()) {
+            return false;
+        }
+        Product product = (Product) other;
+        return name.equals(product.name);
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(getClass(), name);
     }
 
     @Override
     public String toString() {
         return String.format(Locale.ROOT,
-                "Product{name='%s', category='%s', price=%.2f, warrantyMonths=%d, stock=%d}",
-                name, category, price, warrantyMonths, stock);
+                "%s{name='%s', kind=%s, price=%.2f, warrantyMonths=%d, stock=%d}",
+                getClass().getSimpleName(), name, kind, price, warrantyMonths, stock);
     }
 }

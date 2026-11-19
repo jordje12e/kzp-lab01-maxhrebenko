@@ -3,6 +3,9 @@ package ua.lpnu.kzp;
 /**
  * Розбирає один рядок вхідного CSV-файлу у об'єкт {@link Product}.
  *
+ * <p>Лабораторна робота № 3: залежно від категорії створюється конкретний
+ * підтип - {@link Laptop} або {@link Peripheral}.</p>
+ *
  * <p>Формат рядка: {@code назва;категорія;ціна;гарантія(міс);залишок(шт)}.</p>
  */
 public final class ProductParser {
@@ -16,7 +19,7 @@ public final class ProductParser {
      * Статичний фабричний метод: перетворює рядок CSV на товар.
      *
      * @param line один рядок вхідного файлу
-     * @return готовий, перевірений об'єкт {@link Product}
+     * @return готовий, перевірений об'єкт конкретного підтипу {@link Product}
      * @throws IllegalArgumentException якщо рядок має неправильний формат
      *                                  або якесь поле порушує обмеження
      */
@@ -32,7 +35,7 @@ public final class ProductParser {
         }
 
         String name = fields[0].trim();
-        String category = fields[1].trim();
+        ProductKind kind = ProductKind.fromLabel(fields[1].trim());
 
         double price;
         int warrantyMonths;
@@ -45,6 +48,9 @@ public final class ProductParser {
             throw new IllegalArgumentException("Числове поле має помилковий формат", exception);
         }
 
-        return new Product(name, category, price, warrantyMonths, stock);
+        return switch (kind) {
+            case LAPTOP -> new Laptop(name, price, warrantyMonths, stock);
+            case PERIPHERAL -> new Peripheral(name, price, warrantyMonths, stock);
+        };
     }
 }

@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>ua.lpnu.kzp</groupId>
-    <artifactId>lab02</artifactId>
+    <artifactId>lab03</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
 
@@ -23,7 +23,7 @@
     </dependencies>
 
     <build>
-        <finalName>lab02</finalName>
+        <finalName>lab03</finalName>
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
@@ -40,6 +40,9 @@
                 <groupId>com.github.spotbugs</groupId>
                 <artifactId>spotbugs-maven-plugin</artifactId>
                 <version>4.9.7.0</version>
+                <configuration>
+                    <excludeFilterFile>spotbugs-exclude.xml</excludeFilterFile>
+                </configuration>
                 <executions>
                     <execution>
                         <phase>verify</phase>

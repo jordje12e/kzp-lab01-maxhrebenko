@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class MainTest {
@@ -77,6 +76,14 @@ class MainTest {
         String report = Main.buildReport(List.of("Монітор Dell;Монітор;1000;12;1"));
 
         assertTrue(report.contains("Помилок: 1"));
+    }
+
+    @Test
+    void warrantyCostDependsOnProductKind() {
+        String report = Main.buildReport(List.of(
+                "Ноутбук A;Ноутбук;20000.00;24;1"));
+
+        assertTrue(report.contains("Загальна вартість гарантійного обслуговування: 2200.00 грн"));
     }
 
     @Test

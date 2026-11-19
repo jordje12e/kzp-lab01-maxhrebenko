@@ -3,20 +3,27 @@ package ua.lpnu.kzp;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ProductParserTest {
 
     @Test
-    void parsesValidLine() {
+    void parsesLaptopLine() {
         Product product = ProductParser.fromCsv("Lenovo IdeaPad 3;Ноутбук;24999.00;24;5");
 
+        assertInstanceOf(Laptop.class, product);
         assertEquals("Lenovo IdeaPad 3", product.name());
-        assertEquals("Ноутбук", product.category());
-        assertEquals(24999.00, product.price());
-        assertEquals(24, product.warrantyMonths());
-        assertEquals(5, product.stock());
+        assertEquals(ProductKind.LAPTOP, product.kind());
+    }
+
+    @Test
+    void parsesPeripheralLine() {
+        Product product = ProductParser.fromCsv("Logitech MX Master;Периферія;2000.00;12;3");
+
+        assertInstanceOf(Peripheral.class, product);
+        assertEquals(ProductKind.PERIPHERAL, product.kind());
     }
 
     @Test

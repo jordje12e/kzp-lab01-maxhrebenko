@@ -13,9 +13,9 @@ import java.util.Locale;
 /**
  * Консольна програма обробки товарів магазину техніки (варіант 10).
  *
- * <p>Лабораторна робота № 2: рядки CSV тепер перетворюються на об'єкти
- * {@link Product} через статичну фабрику {@link ProductParser#fromCsv(String)},
- * а не обробляються "наживо" прямо в циклі, як у лабораторній № 1.</p>
+ * <p>Лабораторна робота № 3: товари тепер представлені конкретними
+ * підтипами ({@link Laptop}, {@link Peripheral}), а вартість гарантійного
+ * обслуговування рахується поліморфно - через {@link Product#warrantyCost()}.</p>
  */
 public final class Main {
 
@@ -74,10 +74,12 @@ public final class Main {
 
         int validCount = products.size();
         double totalPrice = 0.0;
+        double totalWarrantyCost = 0.0;
         int maxWarranty = 0;
         int totalStock = 0;
         for (Product product : products) {
             totalPrice += product.price();
+            totalWarrantyCost += product.warrantyCost();
             maxWarranty = Math.max(maxWarranty, product.warrantyMonths());
             totalStock += product.stock();
         }
@@ -88,6 +90,7 @@ public final class Main {
         report.append(line("Середня ціна: %.2f грн", averagePrice));
         report.append(line("Найдовша гарантія: %d міс", maxWarranty));
         report.append(line("Загальна кількість на складі: %d шт", totalStock));
+        report.append(line("Загальна вартість гарантійного обслуговування: %.2f грн", totalWarrantyCost));
         report.append(line("Помилок: %d", errors.size()));
         for (String error : errors) {
             report.append(error).append(System.lineSeparator());
@@ -112,7 +115,7 @@ public final class Main {
     }
 
     private static void printUsage() {
-        System.out.printf("Використання: java -jar lab02.jar [--help] [--version] "
+        System.out.printf("Використання: java -jar lab03.jar [--help] [--version] "
                 + "[--input <файл>] [--output <файл>]%n");
     }
 
